@@ -4,97 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>👁 緑内障・生活習慣 記録帳</title>
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, getDocs, orderBy, query }
+  import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA6v1m-YnLhUqi4Mn6DQZ2LwGtnTR1zJ3o",
-    authDomain: "glaucoma-tracker.firebaseapp.com",
-    projectId: "glaucoma-tracker",
-    storageBucket: "glaucoma-tracker.firebasestorage.app",
-    messagingSenderId: "402700142872",
-    appId: "1:402700142872:web:ed3e90a7514587b7c4766d"
+  const cfg = {
+    apiKey:"AIzaSyA6v1m-YnLhUqi4Mn6DQZ2LwGtnTR1zJ3o",
+    authDomain:"glaucoma-tracker.firebaseapp.com",
+    projectId:"glaucoma-tracker",
+    storageBucket:"glaucoma-tracker.firebasestorage.app",
+    messagingSenderId:"402700142872",
+    appId:"1:402700142872:web:ed3e90a7514587b7c4766d"
   };
-
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(cfg);
   const db  = getFirestore(app);
-  window._db = db;
-  window._fbReady = true;
-
-  // Firestore操作をグローバルに公開
-  window.fbSaveDaily = async (rec) => {
-    await setDoc(doc(db, "daily", rec.date), rec);
-  };
-  window.fbSaveEye = async (rec) => {
-    await setDoc(doc(db, "eye", rec.date), rec);
-  };
-  window.fbLoadDaily = async () => {
-    const q = query(collection(db, "daily"), orderBy("date","desc"));
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data());
-  };
-  window.fbLoadEye = async () => {
-    const q = query(collection(db, "eye"), orderBy("date","asc"));
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data());
-  };
-
-  // 準備完了イベント発火
+  window.fbSaveDaily  = async r => await setDoc(doc(db,"daily",r.date), r);
+  window.fbSaveEye    = async r => await setDoc(doc(db,"eye",r.date), r);
+  window.fbDeleteDaily= async d => await deleteDoc(doc(db,"daily",d));
+  window.fbDeleteEye  = async d => await deleteDoc(doc(db,"eye",d));
+  window.fbLoadDaily  = async () => { const q=query(collection(db,"daily"),orderBy("date","desc")); const s=await getDocs(q); return s.docs.map(d=>d.data()); };
+  window.fbLoadEye    = async () => { const q=query(collection(db,"eye"),orderBy("date","asc"));  const s=await getDocs(q); return s.docs.map(d=>d.data()); };
   window.dispatchEvent(new Event("fbReady"));
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0f1923;color:#e4eaf2;font-family:'Segoe UI',sans-serif;font-size:14px}
 input,textarea,button,select{font-family:inherit}
-.app-header{background:#172130;border-bottom:1px solid #1e3048;padding:12px 16px}
-.app-title{font-size:16px;font-weight:700;color:#3b9eff;margin:0}
-.app-sub{font-size:11px;color:#7a91a8;margin-top:2px}
+.hdr{background:#172130;border-bottom:1px solid #1e3048;padding:12px 16px}
+.hdr-title{font-size:16px;font-weight:700;color:#3b9eff}
+.hdr-sub{font-size:11px;color:#7a91a8;margin-top:2px}
 .tab-bar{display:flex;background:#172130;border-bottom:1px solid #1e3048}
-.tab-btn{flex:1;padding:11px 2px;text-align:center;font-size:12px;cursor:pointer;
-  border:none;background:transparent;color:#7a91a8;
-  border-bottom:2px solid transparent;font-weight:400}
+.tab-btn{flex:1;padding:11px 2px;text-align:center;font-size:12px;cursor:pointer;border:none;background:transparent;color:#7a91a8;border-bottom:2px solid transparent;font-weight:400}
 .tab-btn.active{color:#3b9eff;border-bottom:2px solid #3b9eff;font-weight:700}
 .body{padding:12px 14px;max-width:640px;margin:0 auto}
 .card{background:#172130;border:1px solid #1e3048;border-radius:10px;padding:14px;margin-bottom:12px}
 .sec-title{font-size:13px;font-weight:700;color:#3b9eff;margin-bottom:10px}
-label.lbl{font-size:12px;color:#7a91a8;margin-bottom:4px;display:block}
-input[type=text],input[type=number],input[type=date],textarea{
-  width:100%;background:#0a1520;border:1px solid #1e3048;border-radius:6px;
-  color:#e4eaf2;padding:8px 10px;font-size:14px}
+.lbl{font-size:12px;color:#7a91a8;margin-bottom:4px;display:block}
+input[type=text],input[type=number],input[type=date],textarea{width:100%;background:#0a1520;border:1px solid #1e3048;border-radius:6px;color:#e4eaf2;padding:8px 10px;font-size:14px}
 textarea{resize:vertical}
 .row{display:flex;gap:8px;margin-bottom:10px}
 .col{flex:1}
-.btn-primary{background:#3b9eff;color:#fff;border:none;border-radius:7px;
-  padding:11px 0;width:100%;font-size:14px;font-weight:700;cursor:pointer}
-.btn-green{background:#38c97d;color:#fff;border:none;border-radius:7px;
-  padding:11px 0;width:100%;font-size:14px;font-weight:700;cursor:pointer}
-.toggle-btn{display:inline-flex;align-items:center;gap:5px;cursor:pointer;
-  padding:6px 11px;border-radius:6px;font-size:13px;
-  border:1px solid #1e3048;background:#1a2535;color:#7a91a8}
+.btn-primary{background:#3b9eff;color:#fff;border:none;border-radius:7px;padding:11px 0;width:100%;font-size:14px;font-weight:700;cursor:pointer}
+.btn-green{background:#38c97d;color:#fff;border:none;border-radius:7px;padding:11px 0;width:100%;font-size:14px;font-weight:700;cursor:pointer}
+.btn-sm{border:none;border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700}
+.btn-edit{background:#1a3a5a;color:#3b9eff}
+.btn-del{background:#3a1a1a;color:#f05c5c}
+.toggle-btn{display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:6px 11px;border-radius:6px;font-size:13px;border:1px solid #1e3048;background:#1a2535;color:#7a91a8}
 .toggle-btn.on{border-color:#38c97d;background:#1a3a2a;color:#38c97d}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
 .badge-ok{background:#1a3a2a;color:#38c97d}
 .badge-warn{background:#3a2a10;color:#f5c842}
-.hist-item{border-bottom:1px solid #1e3048;padding-bottom:8px;margin-bottom:8px}
-.mb8{margin-bottom:8px}
-.mb10{margin-bottom:10px}
+.hist-item{border-bottom:1px solid #1e3048;padding-bottom:10px;margin-bottom:10px}
+.hist-hdr{display:flex;justify-content:space-between;align-items:center}
+.btn-group{display:flex;gap:6px}
+.mb8{margin-bottom:8px}.mb10{margin-bottom:10px}
 .flex-gap{display:flex;gap:8px;align-items:center}
 .flex-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .empty{text-align:center;color:#7a91a8;padding:30px}
-.sync-bar{font-size:11px;color:#7a91a8;text-align:right;padding:4px 0 0}
-/* SVGグラフ */
-.chart-wrap{width:100%;overflow-x:auto}
-svg.chart{font-size:10px;font-family:'Segoe UI',sans-serif}
+/* モーダル */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#172130;border:1px solid #1e3048;border-radius:12px;padding:20px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:700;color:#3b9eff;margin-bottom:14px}
+.modal-btns{display:flex;gap:8px;margin-top:14px}
 </style>
 </head>
 <body>
-
-<div class="app-header">
-  <p class="app-title">👁 緑内障・生活習慣 記録帳</p>
-  <p class="app-sub">目標眼圧 14.7 mmHg（基準値 21 から 30% 下降）　<span id="syncStatus">⏳ 読込中...</span></p>
+<div class="hdr">
+  <p class="hdr-title">👁 緑内障・生活習慣 記録帳</p>
+  <p class="hdr-sub">目標眼圧 14.7 mmHg（基準値 21 から 30% 下降）　<span id="syncStatus">⏳ 読込中...</span></p>
 </div>
 <div class="tab-bar">
   <button class="tab-btn active" onclick="showTab(0)">今日の記録</button>
@@ -104,18 +82,12 @@ svg.chart{font-size:10px;font-family:'Segoe UI',sans-serif}
 </div>
 
 <div class="body">
-  <!-- ========== 今日の記録 ========== -->
+  <!-- 今日の記録 -->
   <div id="tab0">
     <div class="card">
       <p class="sec-title">📅 基本記録</p>
-      <div class="mb10">
-        <label class="lbl">日付</label>
-        <input type="date" id="d_date">
-      </div>
-      <div class="mb10">
-        <label class="lbl">体重 (kg)</label>
-        <input type="number" step="0.1" id="d_weight" placeholder="例: 68.5">
-      </div>
+      <div class="mb10"><label class="lbl">日付</label><input type="date" id="d_date"></div>
+      <div class="mb10"><label class="lbl">体重 (kg)</label><input type="number" step="0.1" id="d_weight" placeholder="例: 68.5"></div>
       <div class="mb10">
         <label class="lbl">血圧 (mmHg)</label>
         <div class="flex-gap">
@@ -125,14 +97,8 @@ svg.chart{font-size:10px;font-family:'Segoe UI',sans-serif}
         </div>
       </div>
       <div class="row">
-        <div class="col">
-          <label class="lbl">歩数</label>
-          <input type="number" id="d_steps" placeholder="例: 8500">
-        </div>
-        <div class="col">
-          <label class="lbl">睡眠時間 (h)</label>
-          <input type="number" step="0.5" id="d_sleep" placeholder="例: 7.0">
-        </div>
+        <div class="col"><label class="lbl">歩数</label><input type="number" id="d_steps" placeholder="例: 8500"></div>
+        <div class="col"><label class="lbl">睡眠時間 (h)</label><input type="number" step="0.5" id="d_sleep" placeholder="例: 7.0"></div>
       </div>
       <div class="mb10">
         <label class="lbl">徒歩通勤</label>
@@ -151,238 +117,295 @@ svg.chart{font-size:10px;font-family:'Segoe UI',sans-serif}
         </div>
       </div>
     </div>
-
     <div class="card">
       <p class="sec-title">🥗 食生活チェック</p>
       <div class="mb8 flex-gap">
         <button class="toggle-btn" id="f_tomato" onclick="toggleFood('tomato')">🍅 トマトジュース</button>
-        <div id="tomato_ml_wrap" style="display:none;align-items:center;gap:4px" class="flex-gap">
-          <input type="number" id="d_tomatoMl" value="200" style="width:70px">
-          <span style="color:#7a91a8">ml</span>
+        <div id="tomato_ml_wrap" style="display:none" class="flex-gap">
+          <input type="number" id="d_tomatoMl" value="200" style="width:70px"><span style="color:#7a91a8">ml</span>
         </div>
       </div>
       <div class="mb8 flex-gap">
         <button class="toggle-btn" id="f_dokudami" onclick="toggleFood('dokudami')">🍵 ドクダミ茶</button>
-        <div id="doku_cup_wrap" style="display:none;align-items:center;gap:4px" class="flex-gap">
-          <input type="number" id="d_dokuCup" value="1" style="width:70px">
-          <span style="color:#7a91a8">杯</span>
+        <div id="doku_cup_wrap" style="display:none" class="flex-gap">
+          <input type="number" id="d_dokuCup" value="1" style="width:70px"><span style="color:#7a91a8">杯</span>
         </div>
       </div>
       <div class="mb8"><button class="toggle-btn" id="f_greenVeg" onclick="toggleFood('greenVeg')">🥦 緑黄色野菜</button></div>
       <div class="mb8"><button class="toggle-btn" id="f_fish" onclick="toggleFood('fish')">🐟 青魚</button></div>
       <div class="mb8"><button class="toggle-btn" id="f_salt" onclick="toggleFood('salt')">🧂 減塩を意識</button></div>
-      <div style="margin-top:10px">
-        <label class="lbl">メモ</label>
-        <textarea id="d_memo" rows="2" placeholder="体調・気になること"></textarea>
-      </div>
+      <div style="margin-top:10px"><label class="lbl">メモ</label><textarea id="d_memo" rows="2" placeholder="体調・気になること"></textarea></div>
     </div>
     <button class="btn-green" onclick="saveDaily()">💾 記録を保存</button>
   </div>
 
-  <!-- ========== 眼圧記録 ========== -->
+  <!-- 眼圧記録 -->
   <div id="tab1" style="display:none">
     <div class="card">
       <p class="sec-title">👁 通院記録を追加</p>
-      <div class="mb10">
-        <label class="lbl">日付</label>
-        <input type="date" id="e_date">
-      </div>
+      <div class="mb10"><label class="lbl">日付</label><input type="date" id="e_date"></div>
       <div class="row">
-        <div class="col">
-          <label class="lbl">右眼 (mmHg)</label>
-          <input type="number" id="e_right">
-        </div>
-        <div class="col">
-          <label class="lbl">左眼 (mmHg)</label>
-          <input type="number" id="e_left">
-        </div>
+        <div class="col"><label class="lbl">右眼 (mmHg)</label><input type="number" id="e_right"></div>
+        <div class="col"><label class="lbl">左眼 (mmHg)</label><input type="number" id="e_left"></div>
       </div>
-      <div class="mb10">
-        <label class="lbl">備考（点眼薬変更など）</label>
-        <input type="text" id="e_note">
-      </div>
+      <div class="mb10"><label class="lbl">備考（点眼薬変更など）</label><input type="text" id="e_note"></div>
       <button class="btn-primary" onclick="saveEye()">👁 眼圧を記録</button>
     </div>
     <div class="card">
-      <p class="sec-title">📋 眼圧履歴　目標: 14.7 mmHg 以下（30%下降）</p>
+      <p class="sec-title">📋 眼圧履歴　目標: 14.7 mmHg 以下</p>
       <div id="eyeList"><p class="empty">読込中...</p></div>
     </div>
   </div>
 
-  <!-- ========== グラフ ========== -->
+  <!-- グラフ -->
   <div id="tab2" style="display:none">
-    <div class="card">
-      <p class="sec-title">👁 眼圧推移（目標 14.7 mmHg）</p>
-      <div class="chart-wrap"><div id="eyeChart"></div></div>
-    </div>
-    <div class="card">
-      <p class="sec-title">⚖️ 体重推移 (kg)</p>
-      <div class="chart-wrap"><div id="wtChart"></div></div>
-    </div>
-    <div class="card">
-      <p class="sec-title">💉 血圧推移 (mmHg)</p>
-      <div class="chart-wrap"><div id="bpChart"></div></div>
-    </div>
+    <div class="card"><p class="sec-title">👁 眼圧推移（目標 14.7 mmHg）</p><div id="eyeChart"></div></div>
+    <div class="card"><p class="sec-title">⚖️ 体重推移 (kg)</p><div id="wtChart"></div></div>
+    <div class="card"><p class="sec-title">💉 血圧推移 (mmHg)</p><div id="bpChart"></div></div>
   </div>
 
-  <!-- ========== 履歴 ========== -->
-  <div id="tab4" style="display:none">
+  <!-- 履歴 -->
+  <div id="tab3" style="display:none">
     <div id="histList"><p class="empty">読込中...</p></div>
   </div>
 </div>
 
+<!-- 眼圧編集モーダル -->
+<div class="modal-bg" id="eyeModal">
+  <div class="modal">
+    <p class="modal-title">👁 眼圧記録を編集</p>
+    <div class="mb10"><label class="lbl">日付</label><input type="date" id="em_date" readonly style="opacity:.6"></div>
+    <div class="row">
+      <div class="col"><label class="lbl">右眼 (mmHg)</label><input type="number" id="em_right"></div>
+      <div class="col"><label class="lbl">左眼 (mmHg)</label><input type="number" id="em_left"></div>
+    </div>
+    <div class="mb10"><label class="lbl">備考</label><input type="text" id="em_note"></div>
+    <div class="modal-btns">
+      <button class="btn-green" style="flex:1" onclick="saveEyeEdit()">💾 保存</button>
+      <button class="btn-primary" style="flex:1;background:#555" onclick="closeModal('eyeModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 生活習慣編集モーダル -->
+<div class="modal-bg" id="dailyModal">
+  <div class="modal">
+    <p class="modal-title">📅 生活習慣記録を編集</p>
+    <div class="mb10"><label class="lbl">日付</label><input type="date" id="dm_date" readonly style="opacity:.6"></div>
+    <div class="mb10"><label class="lbl">体重 (kg)</label><input type="number" step="0.1" id="dm_weight"></div>
+    <div class="mb10">
+      <label class="lbl">血圧 (mmHg)</label>
+      <div class="flex-gap">
+        <input type="number" id="dm_bpSys" placeholder="収縮期" style="width:90px">
+        <span style="color:#7a91a8">/</span>
+        <input type="number" id="dm_bpDia" placeholder="拡張期" style="width:90px">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col"><label class="lbl">歩数</label><input type="number" id="dm_steps"></div>
+      <div class="col"><label class="lbl">睡眠時間 (h)</label><input type="number" step="0.5" id="dm_sleep"></div>
+    </div>
+    <div class="mb10"><label class="lbl">メモ</label><textarea id="dm_memo" rows="2"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-green" style="flex:1" onclick="saveDailyEdit()">💾 保存</button>
+      <button class="btn-primary" style="flex:1;background:#555" onclick="closeModal('dailyModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── 状態 ──
-const BASE = 21, TARGET = 14.7;
-let eyeData  = [];
-let dailyData = [];
-let walkVal = true;
-let alcIdx  = 0;
-let foodState = {tomato:false, dokudami:false, greenVeg:false, fish:false, salt:false};
+const BASE=21, TARGET=14.7;
+let eyeData=[], dailyData=[];
+let walkVal=true, alcIdx=0;
+let foodState={tomato:false,dokudami:false,greenVeg:false,fish:false,salt:false};
 
-// ── 初期化 ──
-function todayStr(){
-  return new Date().toISOString().slice(0,10);
-}
-document.getElementById("d_date").value = todayStr();
-document.getElementById("e_date").value = todayStr();
+const todayStr=()=>new Date().toISOString().slice(0,10);
+document.getElementById("d_date").value=todayStr();
+document.getElementById("e_date").value=todayStr();
 
-// Firebase読み込み待ち
-window.addEventListener("fbReady", async () => {
-  document.getElementById("syncStatus").textContent = "☁️ Firebase接続済";
+window.addEventListener("fbReady", async()=>{
+  document.getElementById("syncStatus").textContent="☁️ Firebase接続済";
   await loadAll();
 });
 
 async function loadAll(){
-  try {
-    eyeData   = await window.fbLoadEye();
-    dailyData = await window.fbLoadDaily();
-    renderEyeList();
-    renderHist();
-    renderCharts();
-  } catch(e){
-    document.getElementById("syncStatus").textContent = "⚠️ 読込エラー";
-  }
+  try{
+    eyeData  =await window.fbLoadEye();
+    dailyData=await window.fbLoadDaily();
+    renderEyeList(); renderHist(); renderCharts();
+  }catch(e){ document.getElementById("syncStatus").textContent="⚠️ 読込エラー"; }
 }
 
-// ── タブ切替 ──
-let currentTab = 0;
 function showTab(n){
   [0,1,2,3].forEach(i=>{
-    const el = document.getElementById(i===3?"tab4":"tab"+i);
-    if(el) el.style.display = i===n?"block":"none";
+    document.getElementById("tab"+i).style.display=i===n?"block":"none";
   });
-  document.querySelectorAll(".tab-btn").forEach((b,i)=>{
-    b.classList.toggle("active", i===n);
-  });
-  currentTab = n;
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>b.classList.toggle("active",i===n));
   if(n===2) renderCharts();
 }
 
-// ── 徒歩トグル ──
-function setWalk(v){
-  walkVal = v;
-  document.getElementById("walk_yes").classList.toggle("on", v);
-  document.getElementById("walk_no").classList.toggle("on", !v);
-}
-
-// ── 飲酒トグル ──
-function setAlc(idx, val){
-  alcIdx = idx;
-  [0,1,2,3].forEach(i=>{
-    document.getElementById("alc_"+i).classList.toggle("on", i===idx);
-  });
-}
-
-// ── 食事トグル ──
+function setWalk(v){ walkVal=v; document.getElementById("walk_yes").classList.toggle("on",v); document.getElementById("walk_no").classList.toggle("on",!v); }
+function setAlc(i,v){ alcIdx=i; [0,1,2,3].forEach(j=>document.getElementById("alc_"+j).classList.toggle("on",j===i)); }
 function toggleFood(k){
-  foodState[k] = !foodState[k];
-  document.getElementById("f_"+k).classList.toggle("on", foodState[k]);
-  if(k==="tomato") document.getElementById("tomato_ml_wrap").style.display = foodState[k]?"flex":"none";
-  if(k==="dokudami") document.getElementById("doku_cup_wrap").style.display = foodState[k]?"flex":"none";
+  foodState[k]=!foodState[k];
+  document.getElementById("f_"+k).classList.toggle("on",foodState[k]);
+  if(k==="tomato") document.getElementById("tomato_ml_wrap").style.display=foodState[k]?"flex":"none";
+  if(k==="dokudami") document.getElementById("doku_cup_wrap").style.display=foodState[k]?"flex":"none";
 }
 
 // ── 今日の記録保存 ──
 async function saveDaily(){
-  const date = document.getElementById("d_date").value;
-  if(!date){ alert("日付を入力してください"); return; }
-  const alcLabels = ["なし","少量(1合未満)","1合","2合以上"];
-  const rec = {
-    date,
-    weight: document.getElementById("d_weight").value,
-    bpSys:  document.getElementById("d_bpSys").value,
-    bpDia:  document.getElementById("d_bpDia").value,
-    steps:  document.getElementById("d_steps").value,
-    sleep:  document.getElementById("d_sleep").value,
-    walk:   walkVal,
-    alcohol: alcLabels[alcIdx],
-    tomato:   foodState.tomato,
-    tomatoMl: document.getElementById("d_tomatoMl").value,
-    dokudami: foodState.dokudami,
-    dokuCup:  document.getElementById("d_dokuCup").value,
-    greenVeg: foodState.greenVeg,
-    fish:     foodState.fish,
-    salt:     foodState.salt,
-    memo:     document.getElementById("d_memo").value,
-  };
-  try {
+  const date=document.getElementById("d_date").value;
+  if(!date){alert("日付を入力してください");return;}
+  const alcs=["なし","少量(1合未満)","1合","2合以上"];
+  const rec={date,weight:document.getElementById("d_weight").value,
+    bpSys:document.getElementById("d_bpSys").value,bpDia:document.getElementById("d_bpDia").value,
+    steps:document.getElementById("d_steps").value,sleep:document.getElementById("d_sleep").value,
+    walk:walkVal,alcohol:alcs[alcIdx],
+    tomato:foodState.tomato,tomatoMl:document.getElementById("d_tomatoMl").value,
+    dokudami:foodState.dokudami,dokuCup:document.getElementById("d_dokuCup").value,
+    greenVeg:foodState.greenVeg,fish:foodState.fish,salt:foodState.salt,
+    memo:document.getElementById("d_memo").value};
+  try{
     await window.fbSaveDaily(rec);
-    // ローカルも更新
-    dailyData = dailyData.filter(r=>r.date!==date);
+    dailyData=dailyData.filter(r=>r.date!==date);
     dailyData.unshift(rec);
     dailyData.sort((a,b)=>a.date>b.date?-1:1);
-    renderHist();
-    renderCharts();
-    alert(rec.date.replace(/-/g,"/") + " の記録を保存しました ✓");
-  } catch(e){
-    alert("保存に失敗しました: "+e.message);
-  }
+    renderHist(); renderCharts();
+    alert(date.replace(/-/g,"/")+" の記録を保存しました ✓");
+  }catch(e){alert("保存に失敗: "+e.message);}
 }
 
 // ── 眼圧保存 ──
 async function saveEye(){
-  const date  = document.getElementById("e_date").value;
-  const right = Number(document.getElementById("e_right").value);
-  const left  = Number(document.getElementById("e_left").value);
-  const note  = document.getElementById("e_note").value;
-  if(!right||!left){ alert("右眼・左眼を入力してください"); return; }
-  const rec = {date, right, left, note};
-  try {
+  const date=document.getElementById("e_date").value;
+  const right=Number(document.getElementById("e_right").value);
+  const left=Number(document.getElementById("e_left").value);
+  const note=document.getElementById("e_note").value;
+  if(!right||!left){alert("右眼・左眼を入力してください");return;}
+  const rec={date,right,left,note};
+  try{
     await window.fbSaveEye(rec);
-    eyeData = eyeData.filter(r=>r.date!==date);
+    eyeData=eyeData.filter(r=>r.date!==date);
     eyeData.push(rec);
     eyeData.sort((a,b)=>a.date>b.date?1:-1);
-    renderEyeList();
-    renderCharts();
+    renderEyeList(); renderCharts();
     document.getElementById("e_right").value="";
     document.getElementById("e_left").value="";
     document.getElementById("e_note").value="";
     alert("眼圧を記録しました（右"+right+" / 左"+left+"）");
-  } catch(e){
-    alert("保存に失敗しました: "+e.message);
-  }
+  }catch(e){alert("保存に失敗: "+e.message);}
 }
+
+// ── 眼圧削除 ──
+async function deleteEye(date){
+  if(!confirm(date.replace(/-/g,"/")+" の眼圧記録を削除しますか？")) return;
+  try{
+    await window.fbDeleteEye(date);
+    eyeData=eyeData.filter(r=>r.date!==date);
+    renderEyeList(); renderCharts();
+  }catch(e){alert("削除に失敗: "+e.message);}
+}
+
+// ── 眼圧編集モーダル ──
+function editEye(date){
+  const r=eyeData.find(r=>r.date===date);
+  if(!r) return;
+  document.getElementById("em_date").value=r.date;
+  document.getElementById("em_right").value=r.right;
+  document.getElementById("em_left").value=r.left;
+  document.getElementById("em_note").value=r.note||"";
+  document.getElementById("eyeModal").classList.add("open");
+}
+async function saveEyeEdit(){
+  const date=document.getElementById("em_date").value;
+  const right=Number(document.getElementById("em_right").value);
+  const left=Number(document.getElementById("em_left").value);
+  const note=document.getElementById("em_note").value;
+  if(!right||!left){alert("右眼・左眼を入力してください");return;}
+  const rec={date,right,left,note};
+  try{
+    await window.fbSaveEye(rec);
+    eyeData=eyeData.filter(r=>r.date!==date);
+    eyeData.push(rec);
+    eyeData.sort((a,b)=>a.date>b.date?1:-1);
+    renderEyeList(); renderCharts();
+    closeModal("eyeModal");
+    alert("更新しました ✓");
+  }catch(e){alert("保存に失敗: "+e.message);}
+}
+
+// ── 生活習慣削除 ──
+async function deleteDaily(date){
+  if(!confirm(date.replace(/-/g,"/")+" の記録を削除しますか？")) return;
+  try{
+    await window.fbDeleteDaily(date);
+    dailyData=dailyData.filter(r=>r.date!==date);
+    renderHist(); renderCharts();
+  }catch(e){alert("削除に失敗: "+e.message);}
+}
+
+// ── 生活習慣編集モーダル ──
+function editDaily(date){
+  const r=dailyData.find(r=>r.date===date);
+  if(!r) return;
+  document.getElementById("dm_date").value=r.date;
+  document.getElementById("dm_weight").value=r.weight||"";
+  document.getElementById("dm_bpSys").value=r.bpSys||"";
+  document.getElementById("dm_bpDia").value=r.bpDia||"";
+  document.getElementById("dm_steps").value=r.steps||"";
+  document.getElementById("dm_sleep").value=r.sleep||"";
+  document.getElementById("dm_memo").value=r.memo||"";
+  document.getElementById("dailyModal").classList.add("open");
+}
+async function saveDailyEdit(){
+  const date=document.getElementById("dm_date").value;
+  const orig=dailyData.find(r=>r.date===date)||{};
+  const rec={...orig,
+    date,
+    weight:document.getElementById("dm_weight").value,
+    bpSys:document.getElementById("dm_bpSys").value,
+    bpDia:document.getElementById("dm_bpDia").value,
+    steps:document.getElementById("dm_steps").value,
+    sleep:document.getElementById("dm_sleep").value,
+    memo:document.getElementById("dm_memo").value};
+  try{
+    await window.fbSaveDaily(rec);
+    dailyData=dailyData.filter(r=>r.date!==date);
+    dailyData.unshift(rec);
+    dailyData.sort((a,b)=>a.date>b.date?-1:1);
+    renderHist(); renderCharts();
+    closeModal("dailyModal");
+    alert("更新しました ✓");
+  }catch(e){alert("保存に失敗: "+e.message);}
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 
 // ── 眼圧リスト描画 ──
 function renderEyeList(){
-  const el = document.getElementById("eyeList");
-  if(!eyeData.length){ el.innerHTML='<p class="empty">まだ記録がありません</p>'; return; }
-  el.innerHTML = [...eyeData].reverse().map(r=>{
-    const rOk = r.right<=TARGET, lOk = r.left<=TARGET;
-    const rPct = (((BASE-r.right)/BASE)*100).toFixed(1);
-    const lPct = (((BASE-r.left)/BASE)*100).toFixed(1);
+  const el=document.getElementById("eyeList");
+  if(!eyeData.length){el.innerHTML='<p class="empty">まだ記録がありません</p>';return;}
+  el.innerHTML=[...eyeData].reverse().map(r=>{
+    const rOk=r.right<=TARGET,lOk=r.left<=TARGET;
+    const rP=(((BASE-r.right)/BASE)*100).toFixed(1);
+    const lP=(((BASE-r.left)/BASE)*100).toFixed(1);
     return `<div class="hist-item">
-      <div style="display:flex;justify-content:space-between">
+      <div class="hist-hdr">
         <b>${r.date.replace(/-/g,"/")}</b>
-        <span style="font-size:11px;color:#7a91a8">${r.note||""}</span>
+        <div class="btn-group">
+          <button class="btn-sm btn-edit" onclick="editEye('${r.date}')">✏️ 編集</button>
+          <button class="btn-sm btn-del"  onclick="deleteEye('${r.date}')">🗑 削除</button>
+        </div>
       </div>
+      ${r.note?`<div style="font-size:11px;color:#7a91a8;margin:3px 0">${r.note}</div>`:""}
       <div style="display:flex;gap:14px;margin-top:5px;flex-wrap:wrap">
         <span>右: <b style="color:${rOk?"#38c97d":"#f5c842"}">${r.right}</b>
-          <span style="font-size:11px;color:#7a91a8"> (${rPct}%↓) </span>
+          <span style="font-size:11px;color:#7a91a8"> (${rP}%↓) </span>
           <span class="badge ${rOk?"badge-ok":"badge-warn"}">${rOk?"✓達成":"未達"}</span>
         </span>
         <span>左: <b style="color:${lOk?"#38c97d":"#f5c842"}">${r.left}</b>
-          <span style="font-size:11px;color:#7a91a8"> (${lPct}%↓) </span>
+          <span style="font-size:11px;color:#7a91a8"> (${lP}%↓) </span>
           <span class="badge ${lOk?"badge-ok":"badge-warn"}">${lOk?"✓達成":"未達"}</span>
         </span>
       </div>
@@ -392,27 +415,33 @@ function renderEyeList(){
 
 // ── 履歴描画 ──
 function renderHist(){
-  const el = document.getElementById("histList");
-  if(!dailyData.length){ el.innerHTML='<p class="empty">まだ記録がありません</p>'; return; }
-  el.innerHTML = dailyData.map(r=>{
-    const food = [r.tomato,r.dokudami,r.greenVeg,r.fish,r.salt].filter(Boolean).length;
-    const badges = [
-      r.weight  ? `<span class="badge badge-ok">⚖️ ${r.weight}kg</span>` : "",
-      r.bpSys   ? `<span class="badge ${Number(r.bpSys)<130?"badge-ok":"badge-warn"}">💉 ${r.bpSys}/${r.bpDia}</span>` : "",
-      r.steps   ? `<span class="badge ${Number(r.steps)>=6000?"badge-ok":"badge-warn"}">🚶 ${Number(r.steps).toLocaleString()}歩</span>` : "",
-      r.sleep   ? `<span class="badge ${Number(r.sleep)>=6?"badge-ok":"badge-warn"}">😴 ${r.sleep}h</span>` : "",
-      r.walk    ? `<span class="badge badge-ok">🏃 徒歩通勤</span>` : "",
-      r.tomato  ? `<span class="badge badge-ok">🍅 ${r.tomatoMl}ml</span>` : "",
-      r.dokudami? `<span class="badge badge-ok">🍵 ${r.dokuCup}杯</span>` : "",
-      r.greenVeg? `<span class="badge badge-ok">🥦</span>` : "",
-      r.fish    ? `<span class="badge badge-ok">🐟</span>` : "",
-      r.salt    ? `<span class="badge badge-ok">🧂 減塩</span>` : "",
-      r.alcohol&&r.alcohol!=="なし" ? `<span class="badge badge-warn">🍺 ${r.alcohol}</span>` : "",
+  const el=document.getElementById("histList");
+  if(!dailyData.length){el.innerHTML='<p class="empty">まだ記録がありません</p>';return;}
+  el.innerHTML=dailyData.map(r=>{
+    const food=[r.tomato,r.dokudami,r.greenVeg,r.fish,r.salt].filter(Boolean).length;
+    const badges=[
+      r.weight ?`<span class="badge badge-ok">⚖️ ${r.weight}kg</span>`:"",
+      r.bpSys  ?`<span class="badge ${Number(r.bpSys)<130?"badge-ok":"badge-warn"}">💉 ${r.bpSys}/${r.bpDia}</span>`:"",
+      r.steps  ?`<span class="badge ${Number(r.steps)>=6000?"badge-ok":"badge-warn"}">🚶 ${Number(r.steps).toLocaleString()}歩</span>`:"",
+      r.sleep  ?`<span class="badge ${Number(r.sleep)>=6?"badge-ok":"badge-warn"}">😴 ${r.sleep}h</span>`:"",
+      r.walk   ?`<span class="badge badge-ok">🏃 徒歩通勤</span>`:"",
+      r.tomato ?`<span class="badge badge-ok">🍅 ${r.tomatoMl}ml</span>`:"",
+      r.dokudami?`<span class="badge badge-ok">🍵 ${r.dokuCup}杯</span>`:"",
+      r.greenVeg?`<span class="badge badge-ok">🥦</span>`:"",
+      r.fish   ?`<span class="badge badge-ok">🐟</span>`:"",
+      r.salt   ?`<span class="badge badge-ok">🧂 減塩</span>`:"",
+      r.alcohol&&r.alcohol!=="なし"?`<span class="badge badge-warn">🍺 ${r.alcohol}</span>`:"",
     ].filter(Boolean).join("");
     return `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="hist-hdr" style="margin-bottom:8px">
         <b style="font-size:15px">${r.date.replace(/-/g,"/")}</b>
-        <span style="font-size:11px;color:#7a91a8">食事スコア ${food}/5</span>
+        <div class="flex-gap">
+          <span style="font-size:11px;color:#7a91a8">食事 ${food}/5</span>
+          <div class="btn-group">
+            <button class="btn-sm btn-edit" onclick="editDaily('${r.date}')">✏️ 編集</button>
+            <button class="btn-sm btn-del"  onclick="deleteDaily('${r.date}')">🗑 削除</button>
+          </div>
+        </div>
       </div>
       <div class="flex-wrap">${badges}</div>
       ${r.memo?`<p style="margin-top:7px;font-size:12px;color:#7a91a8">${r.memo}</p>`:""}
@@ -420,76 +449,51 @@ function renderHist(){
   }).join("");
 }
 
-// ── SVGグラフ描画 ──
-function makeSVG(data, lines, W=560, H=180){
+// ── SVGグラフ ──
+function makeSVG(data,lines,W=560,H=180){
   if(!data.length) return '<p class="empty" style="padding:20px">データがありません</p>';
-  const PAD = {t:15,r:10,b:40,l:36};
-  const W2=W-PAD.l-PAD.r, H2=H-PAD.t-PAD.b;
-  const n=data.length;
-
-  // Y軸スケール
+  const P={t:15,r:10,b:40,l:36};
+  const W2=W-P.l-P.r, H2=H-P.t-P.b, n=data.length;
   let yMin=Infinity,yMax=-Infinity;
-  lines.forEach(l=>data.forEach(d=>{ if(d[l.key]!=null){yMin=Math.min(yMin,d[l.key]);yMax=Math.max(yMax,d[l.key]); }}));
-  if(lines.some(l=>l.ref)) lines.filter(l=>l.ref).forEach(l=>{yMin=Math.min(yMin,l.ref);yMax=Math.max(yMax,l.ref);});
-  yMin=Math.floor(yMin-1); yMax=Math.ceil(yMax+1);
-  const ys=v=>(H2-(v-yMin)/(yMax-yMin)*H2)+PAD.t;
-  const xs=i=>PAD.l+i/(n-1||1)*W2;
-
-  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}" style="width:100%;min-width:280px">`;
-  // グリッド
-  const ticks=5;
-  for(let i=0;i<=ticks;i++){
-    const v=yMin+(yMax-yMin)/ticks*i;
-    const y=ys(v);
-    svg+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${y}" y2="${y}" stroke="#1e3048" stroke-dasharray="3 3"/>`;
-    svg+=`<text x="${PAD.l-4}" y="${y+3}" text-anchor="end" fill="#7a91a8" font-size="9">${Math.round(v)}</text>`;
+  lines.forEach(l=>data.forEach(d=>{if(d[l.key]!=null){yMin=Math.min(yMin,d[l.key]);yMax=Math.max(yMax,d[l.key]);}}));
+  lines.filter(l=>l.ref).forEach(l=>{yMin=Math.min(yMin,l.ref);yMax=Math.max(yMax,l.ref);});
+  yMin=Math.floor(yMin-1);yMax=Math.ceil(yMax+1);
+  const ys=v=>H2-(v-yMin)/(yMax-yMin)*H2+P.t;
+  const xs=i=>P.l+i/(n-1||1)*W2;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:280px" font-size="10" font-family="'Segoe UI',sans-serif">`;
+  for(let i=0;i<=5;i++){
+    const v=yMin+(yMax-yMin)/5*i, y=ys(v);
+    svg+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="#1e3048" stroke-dasharray="3 3"/>`;
+    svg+=`<text x="${P.l-4}" y="${y+3}" text-anchor="end" fill="#7a91a8" font-size="9">${Math.round(v)}</text>`;
   }
-  // X軸ラベル（間引き）
-  const step = Math.max(1,Math.ceil(n/8));
-  data.forEach((d,i)=>{
-    if(i%step===0||i===n-1){
-      const x=xs(i);
-      const lbl=d.label||"";
-      svg+=`<text x="${x}" y="${H-PAD.b+14}" text-anchor="middle" fill="#7a91a8" font-size="9">${lbl}</text>`;
-    }
-  });
-  // 基準線
+  const step=Math.max(1,Math.ceil(n/8));
+  data.forEach((d,i)=>{ if(i%step===0||i===n-1) svg+=`<text x="${xs(i)}" y="${H-P.b+14}" text-anchor="middle" fill="#7a91a8" font-size="9">${d.label||""}</text>`; });
   lines.filter(l=>l.ref).forEach(l=>{
     const y=ys(l.ref);
-    svg+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${y}" y2="${y}" stroke="${l.refColor||"#38c97d"}" stroke-dasharray="5 5" stroke-width="1.5"/>`;
-    svg+=`<text x="${W-PAD.r}" y="${y-3}" text-anchor="end" fill="${l.refColor||"#38c97d"}" font-size="9">目標${l.ref}</text>`;
+    svg+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="${l.refColor||"#38c97d"}" stroke-dasharray="5 5" stroke-width="1.5"/>`;
+    svg+=`<text x="${W-P.r}" y="${y-3}" text-anchor="end" fill="${l.refColor||"#38c97d"}" font-size="9">目標${l.ref}</text>`;
   });
-  // 折れ線＋点
   lines.forEach(l=>{
     const pts=data.map((d,i)=>d[l.key]!=null?`${xs(i)},${ys(d[l.key])}`:"").filter(Boolean);
     if(pts.length>1) svg+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${l.color}" stroke-width="2"/>`;
-    data.forEach((d,i)=>{ if(d[l.key]!=null) svg+=`<circle cx="${xs(i)}" cy="${ys(d[l.key])}" r="3.5" fill="${l.color}"/>`; });
+    data.forEach((d,i)=>{if(d[l.key]!=null) svg+=`<circle cx="${xs(i)}" cy="${ys(d[l.key])}" r="3.5" fill="${l.color}"/>`;});
   });
-  // 凡例
   lines.forEach((l,i)=>{
-    svg+=`<rect x="${PAD.l+i*80}" y="${H-12}" width="10" height="4" fill="${l.color}"/>`;
-    svg+=`<text x="${PAD.l+i*80+13}" y="${H-9}" fill="#7a91a8" font-size="9">${l.label}</text>`;
+    svg+=`<rect x="${P.l+i*80}" y="${H-12}" width="10" height="4" fill="${l.color}"/>`;
+    svg+=`<text x="${P.l+i*80+13}" y="${H-9}" fill="#7a91a8" font-size="9">${l.label}</text>`;
   });
-  svg+="</svg>";
-  return svg;
+  return svg+"</svg>";
 }
 
 function renderCharts(){
-  // 眼圧
-  document.getElementById("eyeChart").innerHTML = makeSVG(
-    eyeData.map(r=>({label:r.date.slice(5).replace("-","/"), 右眼:r.right, 左眼:r.left})),
+  document.getElementById("eyeChart").innerHTML=makeSVG(
+    eyeData.map(r=>({label:r.date.slice(5).replace("-","/"),右眼:r.right,左眼:r.left})),
     [{key:"右眼",label:"右眼",color:"#3b9eff",ref:14.7,refColor:"#38c97d"},{key:"左眼",label:"左眼",color:"#f5c842"}]
   );
-  // 体重
-  const wt = dailyData.filter(r=>r.weight).map(r=>({label:r.date.slice(5).replace("-","/"),体重:Number(r.weight)}));
-  document.getElementById("wtChart").innerHTML = wt.length
-    ? makeSVG(wt,[{key:"体重",label:"体重(kg)",color:"#38c97d"}])
-    : '<p class="empty" style="padding:20px">体重を記録すると表示されます</p>';
-  // 血圧
-  const bp = dailyData.filter(r=>r.bpSys).map(r=>({label:r.date.slice(5).replace("-","/"),収縮期:Number(r.bpSys),拡張期:Number(r.bpDia)}));
-  document.getElementById("bpChart").innerHTML = bp.length
-    ? makeSVG(bp,[{key:"収縮期",label:"収縮期",color:"#f05c5c",ref:120,refColor:"#f5c842"},{key:"拡張期",label:"拡張期",color:"#3b9eff"}])
-    : '<p class="empty" style="padding:20px">血圧を記録すると表示されます</p>';
+  const wt=dailyData.filter(r=>r.weight).map(r=>({label:r.date.slice(5).replace("-","/"),体重:Number(r.weight)}));
+  document.getElementById("wtChart").innerHTML=wt.length?makeSVG(wt,[{key:"体重",label:"体重(kg)",color:"#38c97d"}]):'<p class="empty" style="padding:20px">体重を記録すると表示されます</p>';
+  const bp=dailyData.filter(r=>r.bpSys).map(r=>({label:r.date.slice(5).replace("-","/"),収縮期:Number(r.bpSys),拡張期:Number(r.bpDia)}));
+  document.getElementById("bpChart").innerHTML=bp.length?makeSVG(bp,[{key:"収縮期",label:"収縮期",color:"#f05c5c",ref:120,refColor:"#f5c842"},{key:"拡張期",label:"拡張期",color:"#3b9eff"}]):'<p class="empty" style="padding:20px">血圧を記録すると表示されます</p>';
 }
 </script>
 </body>
