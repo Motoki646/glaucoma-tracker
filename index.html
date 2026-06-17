@@ -4,452 +4,493 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>👁 緑内障・生活習慣 記録帳</title>
-<!-- React & Babel CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-<!-- Recharts CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.min.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, getDocs, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6v1m-YnLhUqi4Mn6DQZ2LwGtnTR1zJ3o",
+    authDomain: "glaucoma-tracker.firebaseapp.com",
+    projectId: "glaucoma-tracker",
+    storageBucket: "glaucoma-tracker.firebasestorage.app",
+    messagingSenderId: "402700142872",
+    appId: "1:402700142872:web:ed3e90a7514587b7c4766d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  window._db = db;
+  window._fbReady = true;
+
+  // Firestore操作をグローバルに公開
+  window.fbSaveDaily = async (rec) => {
+    await setDoc(doc(db, "daily", rec.date), rec);
+  };
+  window.fbSaveEye = async (rec) => {
+    await setDoc(doc(db, "eye", rec.date), rec);
+  };
+  window.fbLoadDaily = async () => {
+    const q = query(collection(db, "daily"), orderBy("date","desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  };
+  window.fbLoadEye = async () => {
+    const q = query(collection(db, "eye"), orderBy("date","asc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  };
+
+  // 準備完了イベント発火
+  window.dispatchEvent(new Event("fbReady"));
+</script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0f1923; color: #e4eaf2; font-family: 'Segoe UI', sans-serif; font-size: 14px; }
-  input, textarea, button, select { font-family: inherit; }
-  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f1923;color:#e4eaf2;font-family:'Segoe UI',sans-serif;font-size:14px}
+input,textarea,button,select{font-family:inherit}
+.app-header{background:#172130;border-bottom:1px solid #1e3048;padding:12px 16px}
+.app-title{font-size:16px;font-weight:700;color:#3b9eff;margin:0}
+.app-sub{font-size:11px;color:#7a91a8;margin-top:2px}
+.tab-bar{display:flex;background:#172130;border-bottom:1px solid #1e3048}
+.tab-btn{flex:1;padding:11px 2px;text-align:center;font-size:12px;cursor:pointer;
+  border:none;background:transparent;color:#7a91a8;
+  border-bottom:2px solid transparent;font-weight:400}
+.tab-btn.active{color:#3b9eff;border-bottom:2px solid #3b9eff;font-weight:700}
+.body{padding:12px 14px;max-width:640px;margin:0 auto}
+.card{background:#172130;border:1px solid #1e3048;border-radius:10px;padding:14px;margin-bottom:12px}
+.sec-title{font-size:13px;font-weight:700;color:#3b9eff;margin-bottom:10px}
+label.lbl{font-size:12px;color:#7a91a8;margin-bottom:4px;display:block}
+input[type=text],input[type=number],input[type=date],textarea{
+  width:100%;background:#0a1520;border:1px solid #1e3048;border-radius:6px;
+  color:#e4eaf2;padding:8px 10px;font-size:14px}
+textarea{resize:vertical}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.col{flex:1}
+.btn-primary{background:#3b9eff;color:#fff;border:none;border-radius:7px;
+  padding:11px 0;width:100%;font-size:14px;font-weight:700;cursor:pointer}
+.btn-green{background:#38c97d;color:#fff;border:none;border-radius:7px;
+  padding:11px 0;width:100%;font-size:14px;font-weight:700;cursor:pointer}
+.toggle-btn{display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  padding:6px 11px;border-radius:6px;font-size:13px;
+  border:1px solid #1e3048;background:#1a2535;color:#7a91a8}
+.toggle-btn.on{border-color:#38c97d;background:#1a3a2a;color:#38c97d}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-ok{background:#1a3a2a;color:#38c97d}
+.badge-warn{background:#3a2a10;color:#f5c842}
+.hist-item{border-bottom:1px solid #1e3048;padding-bottom:8px;margin-bottom:8px}
+.mb8{margin-bottom:8px}
+.mb10{margin-bottom:10px}
+.flex-gap{display:flex;gap:8px;align-items:center}
+.flex-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.empty{text-align:center;color:#7a91a8;padding:30px}
+.sync-bar{font-size:11px;color:#7a91a8;text-align:right;padding:4px 0 0}
+/* SVGグラフ */
+.chart-wrap{width:100%;overflow-x:auto}
+svg.chart{font-size:10px;font-family:'Segoe UI',sans-serif}
 </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useMemo } = React;
-const {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, ReferenceLine
-} = Recharts;
+<div class="app-header">
+  <p class="app-title">👁 緑内障・生活習慣 記録帳</p>
+  <p class="app-sub">目標眼圧 14.7 mmHg（基準値 21 から 30% 下降）　<span id="syncStatus">⏳ 読込中...</span></p>
+</div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab(0)">今日の記録</button>
+  <button class="tab-btn" onclick="showTab(1)">眼圧記録</button>
+  <button class="tab-btn" onclick="showTab(2)">グラフ</button>
+  <button class="tab-btn" onclick="showTab(3)">履歴</button>
+</div>
 
-// ── 初期眼圧データ ──
-const INIT_EYE = [
-  { date:"2025-03-02", right:20, left:20, note:"エイベリス開始" },
-  { date:"2025-03-22", right:17, left:18, note:"" },
-  { date:"2025-04-18", right:15, left:15, note:"" },
-  { date:"2025-08-22", right:14, left:15, note:"4モロール追加" },
-  { date:"2025-09-22", right:15, left:18, note:"" },
-  { date:"2025-10-27", right:18, left:18, note:"" },
-  { date:"2025-12-26", right:15, left:16, note:"" },
-  { date:"2026-01-21", right:20, left:18, note:"ドルモロール2本" },
-  { date:"2026-02-19", right:15, left:17, note:"" },
-  { date:"2026-04-04", right:17, left:18, note:"ドルモロール" },
-  { date:"2026-05-19", right:17, left:17, note:"" },
-  { date:"2026-06-17", right:17, left:17, note:"HEとール" },
-];
+<div class="body">
+  <!-- ========== 今日の記録 ========== -->
+  <div id="tab0">
+    <div class="card">
+      <p class="sec-title">📅 基本記録</p>
+      <div class="mb10">
+        <label class="lbl">日付</label>
+        <input type="date" id="d_date">
+      </div>
+      <div class="mb10">
+        <label class="lbl">体重 (kg)</label>
+        <input type="number" step="0.1" id="d_weight" placeholder="例: 68.5">
+      </div>
+      <div class="mb10">
+        <label class="lbl">血圧 (mmHg)</label>
+        <div class="flex-gap">
+          <input type="number" id="d_bpSys" placeholder="収縮期" style="width:90px">
+          <span style="color:#7a91a8">/</span>
+          <input type="number" id="d_bpDia" placeholder="拡張期" style="width:90px">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label class="lbl">歩数</label>
+          <input type="number" id="d_steps" placeholder="例: 8500">
+        </div>
+        <div class="col">
+          <label class="lbl">睡眠時間 (h)</label>
+          <input type="number" step="0.5" id="d_sleep" placeholder="例: 7.0">
+        </div>
+      </div>
+      <div class="mb10">
+        <label class="lbl">徒歩通勤</label>
+        <div class="flex-gap">
+          <button class="toggle-btn on" id="walk_yes" onclick="setWalk(true)">あり（40分）</button>
+          <button class="toggle-btn" id="walk_no" onclick="setWalk(false)">なし（雨天等）</button>
+        </div>
+      </div>
+      <div>
+        <label class="lbl">飲酒</label>
+        <div class="flex-gap" style="flex-wrap:wrap">
+          <button class="toggle-btn on" id="alc_0" onclick="setAlc(0,'なし')">なし</button>
+          <button class="toggle-btn" id="alc_1" onclick="setAlc(1,'少量(1合未満)')">少量(1合未満)</button>
+          <button class="toggle-btn" id="alc_2" onclick="setAlc(2,'1合')">1合</button>
+          <button class="toggle-btn" id="alc_3" onclick="setAlc(3,'2合以上')">2合以上</button>
+        </div>
+      </div>
+    </div>
 
-const BASE = 21;
-const TARGET = Math.round(BASE * 0.7 * 10) / 10; // 14.7
+    <div class="card">
+      <p class="sec-title">🥗 食生活チェック</p>
+      <div class="mb8 flex-gap">
+        <button class="toggle-btn" id="f_tomato" onclick="toggleFood('tomato')">🍅 トマトジュース</button>
+        <div id="tomato_ml_wrap" style="display:none;align-items:center;gap:4px" class="flex-gap">
+          <input type="number" id="d_tomatoMl" value="200" style="width:70px">
+          <span style="color:#7a91a8">ml</span>
+        </div>
+      </div>
+      <div class="mb8 flex-gap">
+        <button class="toggle-btn" id="f_dokudami" onclick="toggleFood('dokudami')">🍵 ドクダミ茶</button>
+        <div id="doku_cup_wrap" style="display:none;align-items:center;gap:4px" class="flex-gap">
+          <input type="number" id="d_dokuCup" value="1" style="width:70px">
+          <span style="color:#7a91a8">杯</span>
+        </div>
+      </div>
+      <div class="mb8"><button class="toggle-btn" id="f_greenVeg" onclick="toggleFood('greenVeg')">🥦 緑黄色野菜</button></div>
+      <div class="mb8"><button class="toggle-btn" id="f_fish" onclick="toggleFood('fish')">🐟 青魚</button></div>
+      <div class="mb8"><button class="toggle-btn" id="f_salt" onclick="toggleFood('salt')">🧂 減塩を意識</button></div>
+      <div style="margin-top:10px">
+        <label class="lbl">メモ</label>
+        <textarea id="d_memo" rows="2" placeholder="体調・気になること"></textarea>
+      </div>
+    </div>
+    <button class="btn-green" onclick="saveDaily()">💾 記録を保存</button>
+  </div>
 
-const todayStr = () => new Date().toISOString().slice(0,10);
-const fmt = d => d.replace(/-/g,"/");
-const pct = v => (((BASE - v) / BASE) * 100).toFixed(1);
+  <!-- ========== 眼圧記録 ========== -->
+  <div id="tab1" style="display:none">
+    <div class="card">
+      <p class="sec-title">👁 通院記録を追加</p>
+      <div class="mb10">
+        <label class="lbl">日付</label>
+        <input type="date" id="e_date">
+      </div>
+      <div class="row">
+        <div class="col">
+          <label class="lbl">右眼 (mmHg)</label>
+          <input type="number" id="e_right">
+        </div>
+        <div class="col">
+          <label class="lbl">左眼 (mmHg)</label>
+          <input type="number" id="e_left">
+        </div>
+      </div>
+      <div class="mb10">
+        <label class="lbl">備考（点眼薬変更など）</label>
+        <input type="text" id="e_note">
+      </div>
+      <button class="btn-primary" onclick="saveEye()">👁 眼圧を記録</button>
+    </div>
+    <div class="card">
+      <p class="sec-title">📋 眼圧履歴　目標: 14.7 mmHg 以下（30%下降）</p>
+      <div id="eyeList"><p class="empty">読込中...</p></div>
+    </div>
+  </div>
 
-const load = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch { return fb; } };
-const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  <!-- ========== グラフ ========== -->
+  <div id="tab2" style="display:none">
+    <div class="card">
+      <p class="sec-title">👁 眼圧推移（目標 14.7 mmHg）</p>
+      <div class="chart-wrap"><div id="eyeChart"></div></div>
+    </div>
+    <div class="card">
+      <p class="sec-title">⚖️ 体重推移 (kg)</p>
+      <div class="chart-wrap"><div id="wtChart"></div></div>
+    </div>
+    <div class="card">
+      <p class="sec-title">💉 血圧推移 (mmHg)</p>
+      <div class="chart-wrap"><div id="bpChart"></div></div>
+    </div>
+  </div>
 
-// ── カラーパレット ──
-const C = {
-  bg:"#0f1923", card:"#172130", border:"#1e3048",
-  accent:"#3b9eff", green:"#38c97d", yellow:"#f5c842",
-  red:"#f05c5c", text:"#e4eaf2", sub:"#7a91a8",
-};
+  <!-- ========== 履歴 ========== -->
+  <div id="tab4" style="display:none">
+    <div id="histList"><p class="empty">読込中...</p></div>
+  </div>
+</div>
 
-// ── スタイルヘルパー ──
-const css = {
-  card: { background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:14, marginBottom:12 },
-  label: { fontSize:12, color:C.sub, marginBottom:4, display:"block" },
-  input: { width:"100%", background:"#0a1520", border:`1px solid ${C.border}`, borderRadius:6,
-           color:C.text, padding:"8px 10px", fontSize:14 },
-  row: { display:"flex", gap:8, marginBottom:10 },
-  h2: { fontSize:13, fontWeight:700, color:C.accent, marginBottom:10 },
-  btn: (col=C.accent) => ({
-    background:col, color:"#fff", border:"none", borderRadius:7,
-    padding:"11px 0", width:"100%", fontSize:14, fontWeight:700, cursor:"pointer"
-  }),
-  toggle: on => ({
-    display:"inline-flex", alignItems:"center", gap:5, cursor:"pointer",
-    padding:"6px 11px", borderRadius:6, fontSize:13, border:`1px solid ${on ? C.green : C.border}`,
-    background: on ? "#1a3a2a" : "#1a2535", color: on ? C.green : C.sub,
-  }),
-  badge: ok => ({
-    display:"inline-block", padding:"2px 8px", borderRadius:20, fontSize:11, fontWeight:700,
-    background: ok ? "#1a3a2a" : "#3a2a10", color: ok ? C.green : C.yellow,
-  }),
-};
+<script>
+// ── 状態 ──
+const BASE = 21, TARGET = 14.7;
+let eyeData  = [];
+let dailyData = [];
+let walkVal = true;
+let alcIdx  = 0;
+let foodState = {tomato:false, dokudami:false, greenVeg:false, fish:false, salt:false};
 
-// ══════════════════════════════════════════
-// 今日の記録タブ
-// ══════════════════════════════════════════
-function TabDaily({ dailyRecords, setDailyRecords }) {
-  const [f, setF] = useState({
-    date:todayStr(), weight:"", bpSys:"", bpDia:"",
-    steps:"", walk:true, sleep:"", alcohol:"なし",
-    tomato:false, tomatoMl:"200",
-    dokudami:false, dokuCup:"1",
-    greenVeg:false, fish:false, salt:false, memo:"",
+// ── 初期化 ──
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+document.getElementById("d_date").value = todayStr();
+document.getElementById("e_date").value = todayStr();
+
+// Firebase読み込み待ち
+window.addEventListener("fbReady", async () => {
+  document.getElementById("syncStatus").textContent = "☁️ Firebase接続済";
+  await loadAll();
+});
+
+async function loadAll(){
+  try {
+    eyeData   = await window.fbLoadEye();
+    dailyData = await window.fbLoadDaily();
+    renderEyeList();
+    renderHist();
+    renderCharts();
+  } catch(e){
+    document.getElementById("syncStatus").textContent = "⚠️ 読込エラー";
+  }
+}
+
+// ── タブ切替 ──
+let currentTab = 0;
+function showTab(n){
+  [0,1,2,3].forEach(i=>{
+    const el = document.getElementById(i===3?"tab4":"tab"+i);
+    if(el) el.style.display = i===n?"block":"none";
   });
-  const set = (k,v) => setF(p=>({...p,[k]:v}));
-
-  const onSave = () => {
-    if (!f.date) { alert("日付を入力してください"); return; }
-    setDailyRecords(p => {
-      const arr = p.filter(r => r.date !== f.date);
-      return [...arr, {...f}].sort((a,b) => a.date > b.date ? -1 : 1);
-    });
-    alert(`${fmt(f.date)} の記録を保存しました ✓`);
-  };
-
-  return (
-    <div>
-      {/* 基本記録 */}
-      <div style={css.card}>
-        <p style={css.h2}>📅 基本記録</p>
-        <div style={{...css.row, marginBottom:10}}>
-          <div style={{flex:1}}>
-            <label style={css.label}>日付</label>
-            <input type="date" style={css.input} value={f.date} onChange={e=>set("date",e.target.value)}/>
-          </div>
-        </div>
-        <div style={{marginBottom:10}}>
-          <label style={css.label}>体重 (kg)</label>
-          <input type="number" step="0.1" style={css.input} placeholder="例: 68.5"
-            value={f.weight} onChange={e=>set("weight",e.target.value)}/>
-        </div>
-        <div style={{marginBottom:10}}>
-          <label style={css.label}>血圧 (mmHg)</label>
-          <div style={{display:"flex", gap:8, alignItems:"center"}}>
-            <input type="number" style={{...css.input,width:90}} placeholder="収縮期"
-              value={f.bpSys} onChange={e=>set("bpSys",e.target.value)}/>
-            <span style={{color:C.sub, fontSize:16}}>/</span>
-            <input type="number" style={{...css.input,width:90}} placeholder="拡張期"
-              value={f.bpDia} onChange={e=>set("bpDia",e.target.value)}/>
-          </div>
-        </div>
-        <div style={css.row}>
-          <div style={{flex:1}}>
-            <label style={css.label}>歩数</label>
-            <input type="number" style={css.input} placeholder="例: 8500"
-              value={f.steps} onChange={e=>set("steps",e.target.value)}/>
-          </div>
-          <div style={{flex:1}}>
-            <label style={css.label}>睡眠時間 (h)</label>
-            <input type="number" step="0.5" style={css.input} placeholder="例: 7.0"
-              value={f.sleep} onChange={e=>set("sleep",e.target.value)}/>
-          </div>
-        </div>
-        <div style={{marginBottom:10}}>
-          <label style={css.label}>徒歩通勤</label>
-          <div style={{display:"flex", gap:8}}>
-            {[["あり（40分）",true],["なし（雨天等）",false]].map(([l,v])=>(
-              <button key={l} style={css.toggle(f.walk===v)} onClick={()=>set("walk",v)}>{l}</button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label style={css.label}>飲酒</label>
-          <div style={{display:"flex", gap:6, flexWrap:"wrap"}}>
-            {["なし","少量(1合未満)","1合","2合以上"].map(v=>(
-              <button key={v} style={css.toggle(f.alcohol===v)} onClick={()=>set("alcohol",v)}>{v}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 食生活 */}
-      <div style={css.card}>
-        <p style={css.h2}>🥗 食生活チェック</p>
-        <div style={{marginBottom:8, display:"flex", alignItems:"center", gap:10}}>
-          <button style={css.toggle(f.tomato)} onClick={()=>set("tomato",!f.tomato)}>🍅 トマトジュース</button>
-          {f.tomato && (
-            <div style={{display:"flex",alignItems:"center",gap:4}}>
-              <input type="number" style={{...css.input,width:70}} value={f.tomatoMl}
-                onChange={e=>set("tomatoMl",e.target.value)}/>
-              <span style={{color:C.sub}}>ml</span>
-            </div>
-          )}
-        </div>
-        <div style={{marginBottom:8, display:"flex", alignItems:"center", gap:10}}>
-          <button style={css.toggle(f.dokudami)} onClick={()=>set("dokudami",!f.dokudami)}>🍵 ドクダミ茶</button>
-          {f.dokudami && (
-            <div style={{display:"flex",alignItems:"center",gap:4}}>
-              <input type="number" style={{...css.input,width:70}} value={f.dokuCup}
-                onChange={e=>set("dokuCup",e.target.value)}/>
-              <span style={{color:C.sub}}>杯</span>
-            </div>
-          )}
-        </div>
-        {[{k:"greenVeg",l:"🥦 緑黄色野菜"},{k:"fish",l:"🐟 青魚"},{k:"salt",l:"🧂 減塩を意識"}].map(({k,l})=>(
-          <div key={k} style={{marginBottom:8}}>
-            <button style={css.toggle(f[k])} onClick={()=>set(k,!f[k])}>{l}</button>
-          </div>
-        ))}
-        <div style={{marginTop:10}}>
-          <label style={css.label}>メモ</label>
-          <textarea style={{...css.input,height:60,resize:"vertical"}}
-            placeholder="体調・気になること"
-            value={f.memo} onChange={e=>set("memo",e.target.value)}/>
-        </div>
-      </div>
-      <button style={css.btn(C.green)} onClick={onSave}>💾 記録を保存</button>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════
-// 眼圧記録タブ
-// ══════════════════════════════════════════
-function TabEye({ eyeRecords, setEyeRecords }) {
-  const [f, setF] = useState({ date:todayStr(), right:"", left:"", note:"" });
-  const set = (k,v) => setF(p=>({...p,[k]:v}));
-
-  const onSave = () => {
-    if (!f.right || !f.left) { alert("右眼・左眼を入力してください"); return; }
-    const rec = { ...f, right:Number(f.right), left:Number(f.left) };
-    setEyeRecords(p => {
-      const arr = p.filter(r => r.date !== rec.date);
-      return [...arr, rec].sort((a,b)=>a.date>b.date?1:-1);
-    });
-    setF({ date:todayStr(), right:"", left:"", note:"" });
-    alert(`眼圧を記録しました（右${rec.right} / 左${rec.left}）`);
-  };
-
-  return (
-    <div>
-      <div style={css.card}>
-        <p style={css.h2}>👁 通院記録を追加</p>
-        <div style={{marginBottom:10}}>
-          <label style={css.label}>日付</label>
-          <input type="date" style={css.input} value={f.date} onChange={e=>set("date",e.target.value)}/>
-        </div>
-        <div style={css.row}>
-          <div style={{flex:1}}>
-            <label style={css.label}>右眼 (mmHg)</label>
-            <input type="number" style={css.input} value={f.right} onChange={e=>set("right",e.target.value)}/>
-          </div>
-          <div style={{flex:1}}>
-            <label style={css.label}>左眼 (mmHg)</label>
-            <input type="number" style={css.input} value={f.left} onChange={e=>set("left",e.target.value)}/>
-          </div>
-        </div>
-        <div style={{marginBottom:12}}>
-          <label style={css.label}>備考（点眼薬変更など）</label>
-          <input type="text" style={css.input} value={f.note} onChange={e=>set("note",e.target.value)}/>
-        </div>
-        <button style={css.btn()} onClick={onSave}>👁 眼圧を記録</button>
-      </div>
-
-      <div style={css.card}>
-        <p style={css.h2}>📋 眼圧履歴　目標: {TARGET} mmHg 以下（30%下降）</p>
-        {[...eyeRecords].reverse().map((r,i)=>{
-          const rOk = r.right <= TARGET, lOk = r.left <= TARGET;
-          return (
-            <div key={i} style={{borderBottom:`1px solid ${C.border}`, paddingBottom:8, marginBottom:8}}>
-              <div style={{display:"flex", justifyContent:"space-between"}}>
-                <b>{fmt(r.date)}</b>
-                {r.note && <span style={{fontSize:11,color:C.sub}}>{r.note}</span>}
-              </div>
-              <div style={{display:"flex", gap:14, marginTop:5, flexWrap:"wrap"}}>
-                <span>右: <b style={{color: rOk?C.green:C.yellow}}>{r.right}</b>
-                  <span style={{fontSize:11,color:C.sub}}> ({pct(r.right)}%↓) </span>
-                  <span style={css.badge(rOk)}>{rOk?"✓達成":"未達"}</span>
-                </span>
-                <span>左: <b style={{color: lOk?C.green:C.yellow}}>{r.left}</b>
-                  <span style={{fontSize:11,color:C.sub}}> ({pct(r.left)}%↓) </span>
-                  <span style={css.badge(lOk)}>{lOk?"✓達成":"未達"}</span>
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════
-// グラフタブ
-// ══════════════════════════════════════════
-function TabChart({ eyeRecords, dailyRecords }) {
-  const eyeData = eyeRecords.map(r=>({
-    date: fmt(r.date).slice(5), 右眼:r.right, 左眼:r.left
-  }));
-  const wtData = dailyRecords.filter(r=>r.weight).map(r=>({
-    date: fmt(r.date).slice(5), 体重:Number(r.weight)
-  }));
-  const bpData = dailyRecords.filter(r=>r.bpSys).map(r=>({
-    date: fmt(r.date).slice(5), 収縮期:Number(r.bpSys), 拡張期:Number(r.bpDia)
-  }));
-
-  const ttStyle = { background:C.card, border:`1px solid ${C.border}`, color:C.text, fontSize:12 };
-  const ax = { fill:C.sub, fontSize:10 };
-
-  return (
-    <div>
-      {/* 眼圧グラフ */}
-      <div style={css.card}>
-        <p style={css.h2}>👁 眼圧推移（目標 {TARGET} mmHg）</p>
-        <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={eyeData} margin={{top:5,right:10,left:-20,bottom:5}}>
-            <CartesianGrid strokeDasharray="3 3" stroke={C.border}/>
-            <XAxis dataKey="date" tick={ax}/>
-            <YAxis domain={[10,25]} tick={ax}/>
-            <Tooltip contentStyle={ttStyle}/>
-            <Legend wrapperStyle={{fontSize:12}}/>
-            <ReferenceLine y={TARGET} stroke={C.green} strokeDasharray="5 5"
-              label={{value:`目標 ${TARGET}`, fill:C.green, fontSize:10, position:"insideTopRight"}}/>
-            <Line type="monotone" dataKey="右眼" stroke={C.accent} strokeWidth={2} dot={{r:4}}/>
-            <Line type="monotone" dataKey="左眼" stroke={C.yellow} strokeWidth={2} dot={{r:4}}/>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* 体重グラフ */}
-      {wtData.length > 0 ? (
-        <div style={css.card}>
-          <p style={css.h2}>⚖️ 体重推移 (kg)</p>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={wtData} margin={{top:5,right:10,left:-20,bottom:5}}>
-              <CartesianGrid strokeDasharray="3 3" stroke={C.border}/>
-              <XAxis dataKey="date" tick={ax}/>
-              <YAxis tick={ax}/>
-              <Tooltip contentStyle={ttStyle}/>
-              <Line type="monotone" dataKey="体重" stroke={C.green} strokeWidth={2} dot={{r:3}}/>
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div style={{...css.card, textAlign:"center", color:C.sub, padding:20, fontSize:12}}>
-          体重を記録するとグラフが表示されます
-        </div>
-      )}
-
-      {/* 血圧グラフ */}
-      {bpData.length > 0 ? (
-        <div style={css.card}>
-          <p style={css.h2}>💉 血圧推移 (mmHg)</p>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={bpData} margin={{top:5,right:10,left:-20,bottom:5}}>
-              <CartesianGrid strokeDasharray="3 3" stroke={C.border}/>
-              <XAxis dataKey="date" tick={ax}/>
-              <YAxis tick={ax}/>
-              <Tooltip contentStyle={ttStyle}/>
-              <Legend wrapperStyle={{fontSize:12}}/>
-              <ReferenceLine y={120} stroke={C.yellow} strokeDasharray="3 3"/>
-              <Line type="monotone" dataKey="収縮期" stroke={C.red} strokeWidth={2} dot={{r:3}}/>
-              <Line type="monotone" dataKey="拡張期" stroke={C.accent} strokeWidth={2} dot={{r:3}}/>
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div style={{...css.card, textAlign:"center", color:C.sub, padding:20, fontSize:12}}>
-          血圧を記録するとグラフが表示されます
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════
-// 履歴タブ
-// ══════════════════════════════════════════
-function TabHistory({ dailyRecords }) {
-  if (dailyRecords.length === 0) return (
-    <div style={{...css.card, textAlign:"center", color:C.sub, padding:30}}>
-      まだ記録がありません
-    </div>
-  );
-
-  return (
-    <div>
-      {dailyRecords.map((r,i)=>{
-        const food = [r.tomato,r.dokudami,r.greenVeg,r.fish,r.salt].filter(Boolean).length;
-        return (
-          <div key={i} style={css.card}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-              <b style={{fontSize:15}}>{fmt(r.date)}</b>
-              <span style={{fontSize:11,color:C.sub}}>食事スコア {food}/5</span>
-            </div>
-            <div style={{display:"flex", flexWrap:"wrap", gap:6}}>
-              {r.weight  && <span style={css.badge(true)}>⚖️ {r.weight}kg</span>}
-              {r.bpSys   && <span style={css.badge(Number(r.bpSys)<130)}>💉 {r.bpSys}/{r.bpDia}</span>}
-              {r.steps   && <span style={css.badge(Number(r.steps)>=6000)}>🚶 {Number(r.steps).toLocaleString()}歩</span>}
-              {r.sleep   && <span style={css.badge(Number(r.sleep)>=6)}>😴 {r.sleep}h</span>}
-              {r.walk    && <span style={css.badge(true)}>🏃 徒歩通勤</span>}
-              {r.tomato  && <span style={css.badge(true)}>🍅 {r.tomatoMl}ml</span>}
-              {r.dokudami && <span style={css.badge(true)}>🍵 {r.dokuCup}杯</span>}
-              {r.greenVeg && <span style={css.badge(true)}>🥦</span>}
-              {r.fish    && <span style={css.badge(true)}>🐟</span>}
-              {r.salt    && <span style={css.badge(true)}>🧂 減塩</span>}
-              {r.alcohol && r.alcohol!=="なし" && <span style={css.badge(false)}>🍺 {r.alcohol}</span>}
-            </div>
-            {r.memo && <p style={{marginTop:7,fontSize:12,color:C.sub}}>{r.memo}</p>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════
-// メインアプリ
-// ══════════════════════════════════════════
-function App() {
-  const [tab, setTab] = useState(0);
-  const [eyeRecords, setEyeRecords]     = useState(()=>load("gr_eye", INIT_EYE));
-  const [dailyRecords, setDailyRecords] = useState(()=>load("gr_daily", []));
-
-  useEffect(()=>save("gr_eye",   eyeRecords),   [eyeRecords]);
-  useEffect(()=>save("gr_daily", dailyRecords), [dailyRecords]);
-
-  const TABS = ["今日の記録","眼圧記録","グラフ","履歴"];
-
-  const tabBtnStyle = active => ({
-    flex:1, padding:"11px 2px", textAlign:"center", fontSize:12,
-    cursor:"pointer", border:"none", background:"transparent",
-    color: active ? C.accent : C.sub,
-    borderBottom: active ? `2px solid ${C.accent}` : "2px solid transparent",
-    fontWeight: active ? 700 : 400,
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>{
+    b.classList.toggle("active", i===n);
   });
-
-  const panels = [
-    <TabDaily    dailyRecords={dailyRecords} setDailyRecords={setDailyRecords}/>,
-    <TabEye      eyeRecords={eyeRecords}     setEyeRecords={setEyeRecords}/>,
-    <TabChart    eyeRecords={eyeRecords}     dailyRecords={dailyRecords}/>,
-    <TabHistory  dailyRecords={dailyRecords}/>,
-  ];
-
-  return (
-    <div style={{minHeight:"100vh", background:C.bg}}>
-      {/* ヘッダー */}
-      <div style={{background:C.card, borderBottom:`1px solid ${C.border}`, padding:"12px 16px"}}>
-        <p style={{fontSize:16, fontWeight:700, color:C.accent}}>👁 緑内障・生活習慣 記録帳</p>
-        <p style={{fontSize:11, color:C.sub, marginTop:2}}>
-          目標眼圧 {TARGET} mmHg（基準値 {BASE} から 30% 下降）
-        </p>
-      </div>
-
-      {/* タブバー */}
-      <div style={{display:"flex", background:C.card, borderBottom:`1px solid ${C.border}`}}>
-        {TABS.map((t,i)=>(
-          <button key={i} style={tabBtnStyle(tab===i)} onClick={()=>setTab(i)}>{t}</button>
-        ))}
-      </div>
-
-      {/* コンテンツ */}
-      <div style={{padding:"12px 14px", maxWidth:640, margin:"0 auto"}}>
-        {panels[tab]}
-      </div>
-    </div>
-  );
+  currentTab = n;
+  if(n===2) renderCharts();
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+// ── 徒歩トグル ──
+function setWalk(v){
+  walkVal = v;
+  document.getElementById("walk_yes").classList.toggle("on", v);
+  document.getElementById("walk_no").classList.toggle("on", !v);
+}
+
+// ── 飲酒トグル ──
+function setAlc(idx, val){
+  alcIdx = idx;
+  [0,1,2,3].forEach(i=>{
+    document.getElementById("alc_"+i).classList.toggle("on", i===idx);
+  });
+}
+
+// ── 食事トグル ──
+function toggleFood(k){
+  foodState[k] = !foodState[k];
+  document.getElementById("f_"+k).classList.toggle("on", foodState[k]);
+  if(k==="tomato") document.getElementById("tomato_ml_wrap").style.display = foodState[k]?"flex":"none";
+  if(k==="dokudami") document.getElementById("doku_cup_wrap").style.display = foodState[k]?"flex":"none";
+}
+
+// ── 今日の記録保存 ──
+async function saveDaily(){
+  const date = document.getElementById("d_date").value;
+  if(!date){ alert("日付を入力してください"); return; }
+  const alcLabels = ["なし","少量(1合未満)","1合","2合以上"];
+  const rec = {
+    date,
+    weight: document.getElementById("d_weight").value,
+    bpSys:  document.getElementById("d_bpSys").value,
+    bpDia:  document.getElementById("d_bpDia").value,
+    steps:  document.getElementById("d_steps").value,
+    sleep:  document.getElementById("d_sleep").value,
+    walk:   walkVal,
+    alcohol: alcLabels[alcIdx],
+    tomato:   foodState.tomato,
+    tomatoMl: document.getElementById("d_tomatoMl").value,
+    dokudami: foodState.dokudami,
+    dokuCup:  document.getElementById("d_dokuCup").value,
+    greenVeg: foodState.greenVeg,
+    fish:     foodState.fish,
+    salt:     foodState.salt,
+    memo:     document.getElementById("d_memo").value,
+  };
+  try {
+    await window.fbSaveDaily(rec);
+    // ローカルも更新
+    dailyData = dailyData.filter(r=>r.date!==date);
+    dailyData.unshift(rec);
+    dailyData.sort((a,b)=>a.date>b.date?-1:1);
+    renderHist();
+    renderCharts();
+    alert(rec.date.replace(/-/g,"/") + " の記録を保存しました ✓");
+  } catch(e){
+    alert("保存に失敗しました: "+e.message);
+  }
+}
+
+// ── 眼圧保存 ──
+async function saveEye(){
+  const date  = document.getElementById("e_date").value;
+  const right = Number(document.getElementById("e_right").value);
+  const left  = Number(document.getElementById("e_left").value);
+  const note  = document.getElementById("e_note").value;
+  if(!right||!left){ alert("右眼・左眼を入力してください"); return; }
+  const rec = {date, right, left, note};
+  try {
+    await window.fbSaveEye(rec);
+    eyeData = eyeData.filter(r=>r.date!==date);
+    eyeData.push(rec);
+    eyeData.sort((a,b)=>a.date>b.date?1:-1);
+    renderEyeList();
+    renderCharts();
+    document.getElementById("e_right").value="";
+    document.getElementById("e_left").value="";
+    document.getElementById("e_note").value="";
+    alert("眼圧を記録しました（右"+right+" / 左"+left+"）");
+  } catch(e){
+    alert("保存に失敗しました: "+e.message);
+  }
+}
+
+// ── 眼圧リスト描画 ──
+function renderEyeList(){
+  const el = document.getElementById("eyeList");
+  if(!eyeData.length){ el.innerHTML='<p class="empty">まだ記録がありません</p>'; return; }
+  el.innerHTML = [...eyeData].reverse().map(r=>{
+    const rOk = r.right<=TARGET, lOk = r.left<=TARGET;
+    const rPct = (((BASE-r.right)/BASE)*100).toFixed(1);
+    const lPct = (((BASE-r.left)/BASE)*100).toFixed(1);
+    return `<div class="hist-item">
+      <div style="display:flex;justify-content:space-between">
+        <b>${r.date.replace(/-/g,"/")}</b>
+        <span style="font-size:11px;color:#7a91a8">${r.note||""}</span>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:5px;flex-wrap:wrap">
+        <span>右: <b style="color:${rOk?"#38c97d":"#f5c842"}">${r.right}</b>
+          <span style="font-size:11px;color:#7a91a8"> (${rPct}%↓) </span>
+          <span class="badge ${rOk?"badge-ok":"badge-warn"}">${rOk?"✓達成":"未達"}</span>
+        </span>
+        <span>左: <b style="color:${lOk?"#38c97d":"#f5c842"}">${r.left}</b>
+          <span style="font-size:11px;color:#7a91a8"> (${lPct}%↓) </span>
+          <span class="badge ${lOk?"badge-ok":"badge-warn"}">${lOk?"✓達成":"未達"}</span>
+        </span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── 履歴描画 ──
+function renderHist(){
+  const el = document.getElementById("histList");
+  if(!dailyData.length){ el.innerHTML='<p class="empty">まだ記録がありません</p>'; return; }
+  el.innerHTML = dailyData.map(r=>{
+    const food = [r.tomato,r.dokudami,r.greenVeg,r.fish,r.salt].filter(Boolean).length;
+    const badges = [
+      r.weight  ? `<span class="badge badge-ok">⚖️ ${r.weight}kg</span>` : "",
+      r.bpSys   ? `<span class="badge ${Number(r.bpSys)<130?"badge-ok":"badge-warn"}">💉 ${r.bpSys}/${r.bpDia}</span>` : "",
+      r.steps   ? `<span class="badge ${Number(r.steps)>=6000?"badge-ok":"badge-warn"}">🚶 ${Number(r.steps).toLocaleString()}歩</span>` : "",
+      r.sleep   ? `<span class="badge ${Number(r.sleep)>=6?"badge-ok":"badge-warn"}">😴 ${r.sleep}h</span>` : "",
+      r.walk    ? `<span class="badge badge-ok">🏃 徒歩通勤</span>` : "",
+      r.tomato  ? `<span class="badge badge-ok">🍅 ${r.tomatoMl}ml</span>` : "",
+      r.dokudami? `<span class="badge badge-ok">🍵 ${r.dokuCup}杯</span>` : "",
+      r.greenVeg? `<span class="badge badge-ok">🥦</span>` : "",
+      r.fish    ? `<span class="badge badge-ok">🐟</span>` : "",
+      r.salt    ? `<span class="badge badge-ok">🧂 減塩</span>` : "",
+      r.alcohol&&r.alcohol!=="なし" ? `<span class="badge badge-warn">🍺 ${r.alcohol}</span>` : "",
+    ].filter(Boolean).join("");
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="font-size:15px">${r.date.replace(/-/g,"/")}</b>
+        <span style="font-size:11px;color:#7a91a8">食事スコア ${food}/5</span>
+      </div>
+      <div class="flex-wrap">${badges}</div>
+      ${r.memo?`<p style="margin-top:7px;font-size:12px;color:#7a91a8">${r.memo}</p>`:""}
+    </div>`;
+  }).join("");
+}
+
+// ── SVGグラフ描画 ──
+function makeSVG(data, lines, W=560, H=180){
+  if(!data.length) return '<p class="empty" style="padding:20px">データがありません</p>';
+  const PAD = {t:15,r:10,b:40,l:36};
+  const W2=W-PAD.l-PAD.r, H2=H-PAD.t-PAD.b;
+  const n=data.length;
+
+  // Y軸スケール
+  let yMin=Infinity,yMax=-Infinity;
+  lines.forEach(l=>data.forEach(d=>{ if(d[l.key]!=null){yMin=Math.min(yMin,d[l.key]);yMax=Math.max(yMax,d[l.key]); }}));
+  if(lines.some(l=>l.ref)) lines.filter(l=>l.ref).forEach(l=>{yMin=Math.min(yMin,l.ref);yMax=Math.max(yMax,l.ref);});
+  yMin=Math.floor(yMin-1); yMax=Math.ceil(yMax+1);
+  const ys=v=>(H2-(v-yMin)/(yMax-yMin)*H2)+PAD.t;
+  const xs=i=>PAD.l+i/(n-1||1)*W2;
+
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}" style="width:100%;min-width:280px">`;
+  // グリッド
+  const ticks=5;
+  for(let i=0;i<=ticks;i++){
+    const v=yMin+(yMax-yMin)/ticks*i;
+    const y=ys(v);
+    svg+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${y}" y2="${y}" stroke="#1e3048" stroke-dasharray="3 3"/>`;
+    svg+=`<text x="${PAD.l-4}" y="${y+3}" text-anchor="end" fill="#7a91a8" font-size="9">${Math.round(v)}</text>`;
+  }
+  // X軸ラベル（間引き）
+  const step = Math.max(1,Math.ceil(n/8));
+  data.forEach((d,i)=>{
+    if(i%step===0||i===n-1){
+      const x=xs(i);
+      const lbl=d.label||"";
+      svg+=`<text x="${x}" y="${H-PAD.b+14}" text-anchor="middle" fill="#7a91a8" font-size="9">${lbl}</text>`;
+    }
+  });
+  // 基準線
+  lines.filter(l=>l.ref).forEach(l=>{
+    const y=ys(l.ref);
+    svg+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${y}" y2="${y}" stroke="${l.refColor||"#38c97d"}" stroke-dasharray="5 5" stroke-width="1.5"/>`;
+    svg+=`<text x="${W-PAD.r}" y="${y-3}" text-anchor="end" fill="${l.refColor||"#38c97d"}" font-size="9">目標${l.ref}</text>`;
+  });
+  // 折れ線＋点
+  lines.forEach(l=>{
+    const pts=data.map((d,i)=>d[l.key]!=null?`${xs(i)},${ys(d[l.key])}`:"").filter(Boolean);
+    if(pts.length>1) svg+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${l.color}" stroke-width="2"/>`;
+    data.forEach((d,i)=>{ if(d[l.key]!=null) svg+=`<circle cx="${xs(i)}" cy="${ys(d[l.key])}" r="3.5" fill="${l.color}"/>`; });
+  });
+  // 凡例
+  lines.forEach((l,i)=>{
+    svg+=`<rect x="${PAD.l+i*80}" y="${H-12}" width="10" height="4" fill="${l.color}"/>`;
+    svg+=`<text x="${PAD.l+i*80+13}" y="${H-9}" fill="#7a91a8" font-size="9">${l.label}</text>`;
+  });
+  svg+="</svg>";
+  return svg;
+}
+
+function renderCharts(){
+  // 眼圧
+  document.getElementById("eyeChart").innerHTML = makeSVG(
+    eyeData.map(r=>({label:r.date.slice(5).replace("-","/"), 右眼:r.right, 左眼:r.left})),
+    [{key:"右眼",label:"右眼",color:"#3b9eff",ref:14.7,refColor:"#38c97d"},{key:"左眼",label:"左眼",color:"#f5c842"}]
+  );
+  // 体重
+  const wt = dailyData.filter(r=>r.weight).map(r=>({label:r.date.slice(5).replace("-","/"),体重:Number(r.weight)}));
+  document.getElementById("wtChart").innerHTML = wt.length
+    ? makeSVG(wt,[{key:"体重",label:"体重(kg)",color:"#38c97d"}])
+    : '<p class="empty" style="padding:20px">体重を記録すると表示されます</p>';
+  // 血圧
+  const bp = dailyData.filter(r=>r.bpSys).map(r=>({label:r.date.slice(5).replace("-","/"),収縮期:Number(r.bpSys),拡張期:Number(r.bpDia)}));
+  document.getElementById("bpChart").innerHTML = bp.length
+    ? makeSVG(bp,[{key:"収縮期",label:"収縮期",color:"#f05c5c",ref:120,refColor:"#f5c842"},{key:"拡張期",label:"拡張期",color:"#3b9eff"}])
+    : '<p class="empty" style="padding:20px">血圧を記録すると表示されます</p>';
+}
 </script>
 </body>
 </html>
